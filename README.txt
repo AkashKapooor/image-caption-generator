@@ -15,7 +15,7 @@ Files -
 
 requirements.txt - set and versions of libraries and packages used for this project.
 
-Code_1.2_Training - feature extraction of images dataset, text cleaning of text dataset, generating tokenizer, descriptions and features file and training models.
+Code_1.2_Training - feature extraction of images dataset, text cleaning of text dataset, generating tokenizer, descriptions and features file and training models and validating the model using BLEU score
 
 Testing_gen_model - Codes to test the generated models on the images dataset.
 
