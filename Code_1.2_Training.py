@@ -379,6 +379,78 @@ for i in range(epochs):
     model.fit_generator(generator, epochs=1, steps_per_epoch= steps, verbose=1)
     model.save("models/model_" + str(i) + ".h5")
 
+################### Evaluating the model ################
+from numpy import argmax
+from nltk.translate.bleu_score import corpus_bleu
+
+
+
+def word_for_id(integer, tokenizer):
+    for word, index in tokenizer.word_index.items():
+     if index == integer:
+         return word
+         return None
+
+def generate_desc(model, tokenizer, photo, max_length):
+    in_text = 'start'
+    for i in range(max_length):
+        sequence = tokenizer.texts_to_sequences([in_text])[0]
+        sequence = pad_sequences([sequence], maxlen=max_length)
+        pred = model.predict([photo,sequence], verbose=0)
+        pred = np.argmax(pred)
+        word = word_for_id(pred, tokenizer)
+        if word is None:
+            break
+        in_text += ' ' + word
+        if word == 'end':
+            break
+    return in_text
+
+
+def evaluate_model(model, descriptions, photos, tokenizer, max_length):
+	actual, predicted = list(), list()
+	# step over the whole set
+	for key, desc_list in descriptions.items():
+		# generate description
+		yhat = generate_desc(model, tokenizer, photos[key], max_length)
+		# store actual and predicted
+		references = [d.split() for d in desc_list]
+		actual.append(references)
+		predicted.append(yhat.split())
+	# calculate BLEU score
+	print('BLEU-1: %f' % corpus_bleu(actual, predicted, weights=(1.0, 0, 0, 0)))
+	print('BLEU-2: %f' % corpus_bleu(actual, predicted, weights=(0.5, 0.5, 0, 0)))
+	print('BLEU-3: %f' % corpus_bleu(actual, predicted, weights=(0.3, 0.3, 0.3, 0)))
+	print('BLEU-4: %f' % corpus_bleu(actual, predicted, weights=(0.25, 0.25, 0.25, 0.25)))
+
+
+
+### loading test data
+filename = dataset_text + "/" + "Flickr_8k.testImages.txt"
+
+test_imgs = load_photos(filename)
+
+print('Dataset: %d' % len(test_imgs))
+
+
+### test descriptions
+
+test_descriptions = load_clean_descriptions("descriptions2.txt", test_imgs)
+
+print('Descriptions: test=%d' % len(test_descriptions))
+
+### test features
+
+test_features = load_features(test_imgs)
+
+print('Photos: test=%d' % len(test_features))
+
+
+# load the model
+filename = 'C:/Users/akash/Desktop/S3/proj/models/model_9.h5'
+model = load_model(filename)
+# evaluate model
+evaluate_model(model, test_descriptions, test_features, tokenizer, max_length)
 
 
 
